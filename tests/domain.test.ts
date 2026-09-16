@@ -11,7 +11,7 @@ test('sample tags and DCAT standalone structure', () => {
   const result = exportConfiguration(state);
   assert.equal(result.catalogs.length, 4);
   assert.equal(result.datasets.length, 4);
-  const standalone = result.catalogs.find(c => c.title === '交通量調査')!;
+  const standalone = result.catalogs.find(c => c.title === '障害復旧手順')!;
   const dataset = result.datasets.find(d => d.parentCatalogId === standalone.id)!;
   assert.equal(dataset.type, 'dcat:Dataset');
   assert.equal(dataset.distribution.type, 'dcat:Distribution');
@@ -20,7 +20,7 @@ test('sample tags and DCAT standalone structure', () => {
 
 test('inheritance retains own values; excluding a folder removes all descendants', () => {
   const state = sampleState(); state.registry = [];
-  const parent = state.nodes.find(n => n.name === '01_人口・世帯')!;
+  const parent = state.nodes.find(n => n.name === '01_企画・開発')!;
   const child = state.nodes.find(n => n.name === '世帯数.csv')!;
   const own = child.title;
   parent.title = '更新後'; parent.tagIds = [state.tags[0].id];
