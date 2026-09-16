@@ -21,7 +21,7 @@ export default defineConfig({
         codeSplitting:{
           groups: [
           { name: 'react-vendor', test: /node_modules\/(react|react-dom|react-router-dom)/, minSize: 20000 },
-          { name: 'recharts', test: /node_modules\/zod/, minSize: 20000 },
+          { name: 'zod', test: /node_modules\/zod/, minSize: 20000 },
       ]}}
   }},
 });
