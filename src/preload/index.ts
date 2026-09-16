@@ -11,6 +11,7 @@ const api: TreeAPI = {
   updateSettings: settings => ipcRenderer.invoke('tree:updateSettings', settings),
   addCategory: name => ipcRenderer.invoke('tree:addCategory', name),
   addTag: (label, categoryId) => ipcRenderer.invoke('tree:addTag', label, categoryId),
+  updateTagDescription: (id, description) => ipcRenderer.invoke('tree:updateTagDescription', id, description),
   moveTag: (id, categoryId) => ipcRenderer.invoke('tree:moveTag', id, categoryId),
   importRegistry: () => ipcRenderer.invoke('tree:importRegistry'),
   excludeRegistered: () => ipcRenderer.invoke('tree:excludeRegistered'),

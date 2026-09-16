@@ -4,12 +4,12 @@ export interface SourceNode extends Metadata {
   id: string; parentId: string | null; name: string; kind: 'folder' | 'file';
   sourcePath: string; absolutePath: string; depth: number; mode: Mode; inherit: boolean;
 }
-export interface Tag { id: string; label: string; categoryId: string }
+export interface Tag { id: string; label: string; description?: string; categoryId: string }
 export interface Category { id: string; name: string }
 export interface RegistryEntry {
   sourceId: string; path: string; catalogId: string; title: string; registeredAt: string;
 }
-export interface Settings { maxDepth: number; sourceId: string; sourceRoots: Record<string, string> }
+export interface Settings { maxDepth: number; sourceId: string; sourceRoots: Record<string, string>; excludedExtensions: string[] }
 export interface ScanFailure {
   kind: 'depth' | 'io' | 'cancelled'; message: string; path: string;
   depth?: number; limit: number; checked: number; total?: number;
@@ -27,9 +27,10 @@ export interface TreeAPI {
   depthDemo(): Promise<Snapshot>;
   restore(): Promise<Snapshot>;
   updateNode(id: string, patch: NodePatch): Promise<void>;
-  updateSettings(settings: Pick<Settings, 'maxDepth' | 'sourceId'>): Promise<Snapshot>;
+  updateSettings(settings: Pick<Settings, 'maxDepth' | 'sourceId' | 'excludedExtensions'>): Promise<Snapshot>;
   addCategory(name: string): Promise<Snapshot>;
   addTag(label: string, categoryId: string): Promise<Snapshot>;
+  updateTagDescription(id: string, description: string): Promise<Snapshot>;
   moveTag(id: string, categoryId: string): Promise<Snapshot>;
   importRegistry(): Promise<Snapshot | null>;
   excludeRegistered(): Promise<Snapshot>;

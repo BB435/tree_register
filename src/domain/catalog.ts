@@ -69,7 +69,7 @@ export function exportConfiguration(state: Snapshot) {
   return {
     format: 'tree-register-config', version: 3, sourceId: state.settings.sourceId,
     registryChecked: true, createdAt: new Date().toISOString(),
-    tagPresets: state.tags.map(t => ({ ...t, category: state.categories.find(c => c.id === t.categoryId)!.name })),
+    tagPresets: state.tags.map(t => ({ ...t, description: t.description ?? '', category: state.categories.find(c => c.id === t.categoryId)!.name })),
     tagCategories: state.categories.map(c => c.name),
     rules: { depthViolation: 'stop-entire-import', duplicatePolicy: 'block-until-excluded',
       maxSourceDepth: state.settings.maxDepth, depthOrigin: 'selected-folder-is-1', depthIncludesFiles: true,

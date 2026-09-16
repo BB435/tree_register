@@ -66,6 +66,7 @@ app.whenReady().then(async () => {
   });
   handle('moveTag', (id, categoryId) => exclusive(() => request('moveTag', { id, categoryId })));
   handle('addTag', (label, categoryId) => exclusive(() => request('addTag', { label, categoryId })));
+  handle('updateTagDescription', (id, description) => exclusive(() => request('updateTagDescription', { id, description })));
   handle('depthDemo', () => exclusive(() => request('depthDemo', { jobId: randomUUID() })));
   handle('chooseFolder', () => exclusive(async () => {
     const result = await dialog.showOpenDialog(window, { title: '登録するフォルダを選択', properties: ['openDirectory'] });

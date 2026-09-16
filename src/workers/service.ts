@@ -63,7 +63,13 @@ async function run(method: string, args: any) {
       if (typeof args?.categoryId !== 'string' || !state.categories.some(c => c.id === args.categoryId)) throw new Error('タグのカテゴリを選択してください。');
       const label = args.label.trim();
       if (state.tags.some(t => t.label === label)) throw new Error('同名のタグがあります。');
-      return commit({ ...state, tags: [...state.tags, { id: randomUUID(), label, categoryId: args.categoryId }] });
+      return commit({ ...state, tags: [...state.tags, { id: randomUUID(), label, description: '', categoryId: args.categoryId }] });
+    }
+    case 'updateTagDescription': {
+      assertEditable();
+      if (typeof args?.id !== 'string' || !state.tags.some(t => t.id === args.id)) throw new Error('タグが見つかりません。');
+      if (typeof args?.description !== 'string' || args.description.length > 10000) throw new Error('タグ説明は10,000文字以内で入力してください。');
+      return commit({ ...state, tags: state.tags.map(t => t.id === args.id ? { ...t, description: args.description } : t) });
     }
     case 'moveTag': {
       assertEditable();
@@ -95,8 +101,10 @@ async function run(method: string, args: any) {
         root = await realpath(root);
         const base = state.settings.sourceRoots[sourceId] ?? path.dirname(root);
         if (!isWithin(root, base)) throw new Error('管理元IDに対応する基準位置の外です。別の管理元IDを設定してください。');
-        const nodes = await collect(walk(root, base), limit, args.jobId, p => { current = p.path; progress(p); });
-        return commit({ ...state, nodes, rootPath: root, demo: false, failure: null,
+      const nodes = await collect(walk(root, base), limit, args.jobId, p => { current = p.path; progress(p); });
+        const excluded = new Set(state.settings.excludedExtensions ?? []);
+        const adjusted = nodes.map(n => n.kind === 'file' && excluded.has(path.extname(n.name).toLowerCase()) ? { ...n, mode: 'exclude' as const } : n);
+        return commit({ ...state, nodes: adjusted, rootPath: root, demo: false, failure: null,
           settings: { ...state.settings, sourceId, sourceRoots: { ...state.settings.sourceRoots, [sourceId]: base } } });
       } catch (e) {
         const failure = e instanceof ScanError ? e.detail : { kind: 'io' as const, message: e instanceof Error ? e.message : String(e), path: current, limit, checked: 0 };

@@ -1,0 +1,14 @@
+import { useState } from 'react';
+import { Alert, Box, Button, Chip, MenuItem, Paper, Stack, TextField, Typography } from '@mui/material';
+import type { Snapshot } from '../shared/types';
+export function TagList({ state, busy, onSave, onBack }: { state: Snapshot; busy: boolean; onSave: (id: string, description: string) => void; onBack: () => void }) {
+  const [query, setQuery] = useState('');
+  const [categoryId, setCategoryId] = useState('');
+  const q = query.trim().normalize('NFKC').toLocaleLowerCase();
+  const tags = state.tags.filter(t => (!categoryId || t.categoryId === categoryId) && (!q || `${t.label} ${t.description ?? ''} ${state.categories.find(c => c.id === t.categoryId)?.name ?? ''}`.normalize('NFKC').toLocaleLowerCase().includes(q)));
+  return <Box className="workspace"><Box className="page-heading"><Box><Typography sx={{ color: 'primary.main', fontSize: 11, fontWeight: 700, letterSpacing: 2 }}>TAG MASTER</Typography><Typography variant="h4" sx={{ mt: 1, mb: 1 }}>タグ一覧</Typography><Typography sx={{ color: 'text.secondary' }}>タグの説明文を編集できます。</Typography></Box><Button variant="outlined" onClick={onBack} autoFocus>← 登録設定へ戻る</Button></Box><Paper sx={{ p: 2, mt: 3 }}><Stack direction={{ xs: 'column', md: 'row' }} spacing={2}><TextField fullWidth label="タグ名・説明文を検索" value={query} onChange={e => setQuery(e.target.value)} /><TextField select fullWidth label="カテゴリで絞り込み" value={categoryId} onChange={e => setCategoryId(e.target.value)}><MenuItem value="">すべてのカテゴリ</MenuItem>{state.categories.map(c => <MenuItem key={c.id} value={c.id}>{c.name}</MenuItem>)}</TextField></Stack><Typography sx={{ color: 'text.secondary', fontSize: 11, mt: 1 }}>{tags.length.toLocaleString()} / {state.tags.length.toLocaleString()} 件</Typography></Paper><Stack spacing={1.5} sx={{ mt: 2 }}>{tags.map(tag => <TagRow key={tag.id} tag={tag} category={state.categories.find(c => c.id === tag.categoryId)?.name ?? '未分類'} busy={busy} onSave={onSave} />)}{!tags.length && <Alert severity="info">該当するタグはありません。</Alert>}</Stack></Box>;
+}
+function TagRow({ tag, category, busy, onSave }: { tag: Snapshot['tags'][number]; category: string; busy: boolean; onSave: (id: string, description: string) => void }) {
+  const [description, setDescription] = useState(tag.description ?? '');
+  return <Paper sx={{ p: 2 }}><Stack spacing={1}><Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}><Typography sx={{ fontWeight: 700 }}>{tag.label}</Typography><Chip label={category} variant="outlined" /></Stack><TextField multiline minRows={2} label="タグの説明文" value={description} disabled={busy} onChange={e => setDescription(e.target.value)} slotProps={{ htmlInput: { maxLength: 10000 } }} /><Button sx={{ alignSelf: 'flex-start' }} variant="outlined" disabled={busy || description === (tag.description ?? '')} onClick={() => onSave(tag.id, description)}>説明文を保存</Button></Stack></Paper>;
+}

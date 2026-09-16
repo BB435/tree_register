@@ -175,5 +175,5 @@ export function sampleState(): Snapshot {
  add('交通量調査.xlsx','file',root,'交通量調査',['交通'],'standalone');
  add('README.txt','file',root,'README',[],'exclude');
  add('作業用','folder',root,'作業用',[],'exclude');
- return {nodes,tags,categories,registry:[{sourceId:'demo',path:'地域データアーカイブ/01_人口・世帯',catalogId:'CAT-2026-0042',title:'人口・世帯統計',registeredAt:'2026-09-01'}],settings:{maxDepth:3,sourceId:'demo',sourceRoots:{demo:'demo:/'}},rootPath:'demo:/地域データアーカイブ',demo:true,failure:null};
+ return {nodes,tags,categories,registry:[{sourceId:'demo',path:'地域データアーカイブ/01_人口・世帯',catalogId:'CAT-2026-0042',title:'人口・世帯統計',registeredAt:'2026-09-01'}],settings:{maxDepth:3,sourceId:'demo',sourceRoots:{demo:'demo:/'},excludedExtensions:[]},rootPath:'demo:/地域データアーカイブ',demo:true,failure:null};
 }

@@ -4,6 +4,9 @@ import type { NodePatch, Progress, Snapshot } from '../shared/types';
 import { analyze } from '../domain/catalog';
 import { Tree } from './Tree';
 import { Editor } from './Editor';
+import { RegistrySearch } from './RegistrySearch';
+import { TagList } from './TagList';
+import { CatalogGrid } from './CatalogGrid';
 export function App() {
   const [state, setState] = useState<Snapshot | null>(null),
     [selected, setSelected] = useState('');
@@ -12,8 +15,10 @@ export function App() {
     [error, setError] = useState(''),
     [notice, setNotice] = useState('');
   const [progress, setProgress] = useState<Progress | null>(null);
+  const [screen, setScreen] = useState<'workspace' | 'registry' | 'tags' | 'grid'>('workspace');
   const [depth, setDepth] = useState('3'),
-    [sourceId, setSourceId] = useState('');
+    [sourceId, setSourceId] = useState(''),
+    [excludedExtensions, setExcludedExtensions] = useState('');
   const [confirmation, setConfirmation] = useState<{
     title: string;
     body: string;
@@ -25,6 +30,7 @@ export function App() {
     setSelected(prev => value.nodes.some(n => n.id === prev) ? prev : value.nodes[0]?.id ?? '');
     setDepth(String(value.settings.maxDepth));
     setSourceId(value.settings.sourceId);
+    setExcludedExtensions((value.settings.excludedExtensions ?? []).join(', '));
   }, []);
   useEffect(() => {
     window.tree.getState().then(apply).catch(e => setError(String(e)));
@@ -79,7 +85,7 @@ export function App() {
       action
     });
   }
-  const settingsChanged = !!state && (depth !== String(state.settings.maxDepth) || sourceId !== state.settings.sourceId);
+  const settingsChanged = !!state && (depth !== String(state.settings.maxDepth) || sourceId !== state.settings.sourceId || excludedExtensions !== (state.settings.excludedExtensions ?? []).join(', '));
   const selectedNode = state?.nodes.find(n => n.id === selected);
   if (!state || !analysis) return <Box sx={{
     p: 6
@@ -87,6 +93,9 @@ export function App() {
       mt: 3
     }} />}</Box>;
   const disabled = busy || settingsChanged;
+  if (screen === 'registry') return <><Box component="header" className="app-header"><Stack direction="row" sx={{ alignItems: 'center', gap: 1.5 }}><Box className="brand-icon">▥</Box><Typography sx={{ fontWeight: 750, fontSize: 21 }}>Tree Register</Typography></Stack><Chip label="登録データ検索" variant="outlined" /></Box><RegistrySearch state={state} onBack={() => setScreen('workspace')} /></>;
+  if (screen === 'tags') return <><Box component="header" className="app-header"><Stack direction="row" sx={{ alignItems: 'center', gap: 1.5 }}><Box className="brand-icon">▥</Box><Typography sx={{ fontWeight: 750, fontSize: 21 }}>Tree Register</Typography></Stack><Chip label="タグ一覧" variant="outlined" /></Box><TagList state={state} busy={busy} onSave={(id, description) => void run(() => window.tree.updateTagDescription(id, description))} onBack={() => setScreen('workspace')} /></>;
+  if (screen === 'grid') return <><Box component="header" className="app-header"><Stack direction="row" sx={{ alignItems: 'center', gap: 1.5 }}><Box className="brand-icon">▥</Box><Typography sx={{ fontWeight: 750, fontSize: 21 }}>Tree Register</Typography></Stack><Chip label="表形式編集" variant="outlined" /></Box><CatalogGrid state={state} busy={busy} onPatch={patch} onBack={() => setScreen('workspace')} /></>;
   return <>
     <Box component="header" className="app-header"><Stack direction="row" sx={{
         alignItems: "center",
@@ -111,7 +120,7 @@ export function App() {
           }}>フォルダから、データカタログへ。</Typography><Typography sx={{
             color: "text.secondary"
           }}>階層を確認しながら、登録方法とメタデータを整えます。</Typography></Box>
-        <Stack direction="row" spacing={1}><Button variant="outlined" disabled={busy} onClick={() => confirm('サンプルを再読込', '現在の作業設定・タグ分類・台帳をデモデータに置き換えます。', () => void run(window.tree.sample))}>サンプルを再読込</Button>
+        <Stack direction="row" spacing={1}><Button variant="outlined" onClick={() => setScreen('grid')}>表形式で編集</Button><Button variant="outlined" onClick={() => setScreen('tags')}>タグ一覧</Button><Button variant="outlined" onClick={() => setScreen('registry')}>登録データを検索</Button><Button variant="outlined" disabled={busy} onClick={() => confirm('サンプルを再読込', '現在の作業設定・タグ分類・台帳をデモデータに置き換えます。', () => void run(window.tree.sample))}>サンプルを再読込</Button>
           <Button variant="contained" disabled={disabled} onClick={() => confirm('フォルダを選択', '読込成功時に現在の作業設定を置き換えます。失敗した場合は前の設定を保持します。', () => void run(window.tree.chooseFolder))}>＋ フォルダを選択</Button></Stack>
       </Box>
       <Stack direction="row" sx={{
@@ -140,10 +149,12 @@ export function App() {
           }} />
         <TextField label="管理元ID" value={sourceId} onChange={e => setSourceId(e.target.value)} disabled={busy} sx={{
             width: 190
-          }} />
+        }} />
+        <TextField label="初期対象外の拡張子" placeholder=".tmp, .log" value={excludedExtensions} onChange={e => setExcludedExtensions(e.target.value)} disabled={busy} sx={{ width: 220 }} helperText="カンマ区切り。再探索時に適用" />
         <Button variant="outlined" disabled={busy || !settingsChanged || !Number.isInteger(Number(depth)) || Number(depth) < 1 || Number(depth) > 32767 || !sourceId.trim()} onClick={() => void run(() => window.tree.updateSettings({
             maxDepth: Number(depth),
-            sourceId: sourceId.trim()
+            sourceId: sourceId.trim(),
+            excludedExtensions: [...new Set(excludedExtensions.split(',').map(v => v.trim().toLowerCase()).filter(Boolean))]
           }))}>共通設定を適用</Button>
         <Button disabled={busy} onClick={() => confirm('登録済み台帳を読込', '検証に成功したJSONで、現在の登録済み台帳を置き換えます。設定JSONの保存は登録完了として扱いません。', () => void run(window.tree.importRegistry))}>台帳JSONを読込</Button>
         <Button disabled={disabled} onClick={() => void run(window.tree.depthDemo)}>1万件・階層超過を試す</Button>
