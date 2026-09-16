@@ -41,13 +41,14 @@ export async function* walk(root: string, base: string): AsyncGenerator<Entry> {
 }
 
 export async function collect(entries: AsyncIterable<Entry> | Iterable<Entry>, limit: number, jobId: string,
-  progress: (p: Progress) => void, total?: number): Promise<SourceNode[]> {
+  progress: (p: Progress) => void, total?: number, truncate = false): Promise<SourceNode[]> {
   const pending: SourceNode[] = [], byPath = new Map<string, string>();
   const comparisonKeys = new Set<string>();
   let checked = 0, current = '';
   try {
     for await (const entry of entries) {
       checked++; current = entry.path;
+      if (entry.depth > limit && truncate) { if (checked === 1 || checked % 100 === 0) progress({ jobId, checked, path: current, total }); continue; }
       if (entry.depth > limit) throw new ScanError({ kind: 'depth', message: '最大階層を超えたため読込全体を停止しました。',
         path: entry.path, depth: entry.depth, limit, checked, total });
       const key = pathKey(entry.path);

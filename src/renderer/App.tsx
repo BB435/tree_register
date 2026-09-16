@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Alert, AlertTitle, Box, Button, Chip, CircularProgress, Dialog, DialogActions, DialogContent, DialogTitle, Divider, LinearProgress, Paper, Snackbar, Stack, TextField, Typography } from '@mui/material';
+import { Alert, AlertTitle, Box, Button, Chip, CircularProgress, Dialog, DialogActions, DialogContent, DialogTitle, Divider, LinearProgress, MenuItem, Paper, Snackbar, Stack, TextField, Typography } from '@mui/material';
 import type { NodePatch, Progress, Snapshot } from '../shared/types';
 import { analyze } from '../domain/catalog';
 import { Tree } from './Tree';
@@ -18,6 +18,7 @@ export function App() {
   const [screen, setScreen] = useState<'workspace' | 'registry' | 'tags' | 'grid'>('workspace');
   const [depth, setDepth] = useState('3'),
     [sourceId, setSourceId] = useState(''),
+    [depthPolicy, setDepthPolicy] = useState<'error' | 'truncate'>('error'),
     [excludedExtensions, setExcludedExtensions] = useState('');
   const [confirmation, setConfirmation] = useState<{
     title: string;
@@ -31,6 +32,7 @@ export function App() {
     setDepth(String(value.settings.maxDepth));
     setSourceId(value.settings.sourceId);
     setExcludedExtensions((value.settings.excludedExtensions ?? []).join(', '));
+    setDepthPolicy(value.settings.depthPolicy ?? 'error');
   }, []);
   useEffect(() => {
     window.tree.getState().then(apply).catch(e => setError(String(e)));
@@ -85,7 +87,7 @@ export function App() {
       action
     });
   }
-  const settingsChanged = !!state && (depth !== String(state.settings.maxDepth) || sourceId !== state.settings.sourceId || excludedExtensions !== (state.settings.excludedExtensions ?? []).join(', '));
+  const settingsChanged = !!state && (depth !== String(state.settings.maxDepth) || sourceId !== state.settings.sourceId || excludedExtensions !== (state.settings.excludedExtensions ?? []).join(', ') || depthPolicy !== (state.settings.depthPolicy ?? 'error'));
   const selectedNode = state?.nodes.find(n => n.id === selected);
   if (!state || !analysis) return <Box sx={{
     p: 6
@@ -151,10 +153,12 @@ export function App() {
             width: 190
         }} />
         <TextField label="初期対象外の拡張子" placeholder=".tmp, .log" value={excludedExtensions} onChange={e => setExcludedExtensions(e.target.value)} disabled={busy} sx={{ width: 220 }} helperText="カンマ区切り。再探索時に適用" />
+        <TextField select label="階層超過時の動作" value={depthPolicy} onChange={e => setDepthPolicy(e.target.value as 'error' | 'truncate')} disabled={busy} sx={{ width: 220 }}><MenuItem value="error">エラーで停止</MenuItem><MenuItem value="truncate">指定階層まで登録</MenuItem></TextField>
         <Button variant="outlined" disabled={busy || !settingsChanged || !Number.isInteger(Number(depth)) || Number(depth) < 1 || Number(depth) > 32767 || !sourceId.trim()} onClick={() => void run(() => window.tree.updateSettings({
             maxDepth: Number(depth),
             sourceId: sourceId.trim(),
-            excludedExtensions: [...new Set(excludedExtensions.split(',').map(v => v.trim().toLowerCase()).filter(Boolean))]
+            excludedExtensions: [...new Set(excludedExtensions.split(',').map(v => v.trim().toLowerCase()).filter(Boolean))],
+            depthPolicy
           }))}>共通設定を適用</Button>
         <Button disabled={busy} onClick={() => confirm('登録済み台帳を読込', '検証に成功したJSONで、現在の登録済み台帳を置き換えます。設定JSONの保存は登録完了として扱いません。', () => void run(window.tree.importRegistry))}>台帳JSONを読込</Button>
         <Button disabled={disabled} onClick={() => void run(window.tree.depthDemo)}>1万件・階層超過を試す</Button>

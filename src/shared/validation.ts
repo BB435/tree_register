@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 const sourceIdInput = z.string().trim().min(1).max(200).refine(s => !Object.hasOwn(Object.prototype, s), 'この管理元IDは使用できません。');
-export const settingsInput = z.object({ maxDepth: z.number().int().min(1).max(32767), sourceId: sourceIdInput, excludedExtensions: z.array(z.string().regex(/^\.[a-z0-9][a-z0-9_-]{0,19}$/i)).max(100) }).strict();
+export const settingsInput = z.object({ maxDepth: z.number().int().min(1).max(32767), sourceId: sourceIdInput, excludedExtensions: z.array(z.string().regex(/^\.[a-z0-9][a-z0-9_-]{0,19}$/i)).max(100), depthPolicy: z.enum(['error', 'truncate']) }).strict();
 export const nodePatchInput = z.object({
   mode: z.enum(['top', 'sub', 'dataset', 'standalone', 'exclude']).optional(),
   title: z.string().max(2000).optional(), description: z.string().max(100000).optional(),

@@ -101,7 +101,7 @@ async function run(method: string, args: any) {
         root = await realpath(root);
         const base = state.settings.sourceRoots[sourceId] ?? path.dirname(root);
         if (!isWithin(root, base)) throw new Error('管理元IDに対応する基準位置の外です。別の管理元IDを設定してください。');
-      const nodes = await collect(walk(root, base), limit, args.jobId, p => { current = p.path; progress(p); });
+        const nodes = await collect(walk(root, base), limit, args.jobId, p => { current = p.path; progress(p); }, undefined, state.settings.depthPolicy === 'truncate');
         const excluded = new Set(state.settings.excludedExtensions ?? []);
         const adjusted = nodes.map(n => n.kind === 'file' && excluded.has(path.extname(n.name).toLowerCase()) ? { ...n, mode: 'exclude' as const } : n);
         return commit({ ...state, nodes: adjusted, rootPath: root, demo: false, failure: null,
@@ -132,7 +132,7 @@ async function run(method: string, args: any) {
       try {
         if (!state.demo) {
           const base = state.settings.sourceRoots[state.settings.sourceId];
-          const fresh = await collect(walk(state.rootPath, base), state.settings.maxDepth, args.jobId, progress);
+          const fresh = await collect(walk(state.rootPath, base), state.settings.maxDepth, args.jobId, progress, undefined, state.settings.depthPolicy === 'truncate');
           const previous = new Map(state.nodes.map(n => [pathKey(n.sourcePath), n.kind]));
           if (fresh.length !== previous.size || fresh.some(n => previous.get(pathKey(n.sourcePath)) !== n.kind)) {
             throw new ScanError({ kind: 'io', message: 'フォルダの内容が読込時から変わっています。フォルダを再選択してください。',
