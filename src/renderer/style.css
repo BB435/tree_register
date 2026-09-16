@@ -11,6 +11,7 @@ button, input { font: inherit; }
 .tree-row:hover { background: #f1f5f1; }
 .tree-row.selected { background: #eaf3ed; box-shadow: inset 3px 0 #237455; }
 .tree-select { display: flex; gap: 8px; align-items: center; border: none; background: none; color: #20332e; min-width: 0; flex: 1; height: 100%; cursor: pointer; text-align: left; padding: 0 4px; }
+.tree-select:focus-visible, .tree-toggle:focus-visible { outline: 2px solid #237455; outline-offset: -2px; border-radius: 4px; }
 .tree-toggle { width: 22px; border: none; background: none; padding: 0; color: #75847c; cursor: pointer; }
 .tree-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 12px; }
 .folder-icon { color: #ac8b49; font-size: 20px; }

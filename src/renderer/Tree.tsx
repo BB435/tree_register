@@ -69,6 +69,7 @@ export function Tree({
     return next;
   });
   function choose(id: string) {
+    if (!visible.some(n => n.id === id)) return;
     onSelect(id);
     const i = visible.findIndex(n => n.id === id),
       element = tree.current;
@@ -108,15 +109,19 @@ export function Tree({
         if (closed.has(n.id) && !query) toggle(n.id);else if (visible[i + 1]?.parentId === n.id) choose(visible[i + 1].id);
       }
       if (e.key === 'ArrowLeft') {
-        if (!closed.has(n.id) && index.children.has(n.id) && !query) toggle(n.id);else if (n.parentId) choose(n.parentId);
+        if (!closed.has(n.id) && index.children.has(n.id) && !query) toggle(n.id);
+        else if (n.parentId && visible.some(item => item.id === n.parentId)) choose(n.parentId);
       }
-      if (e.key === 'Enter') document.querySelector<HTMLInputElement>('#editor input:not(:disabled)')?.focus();
+      if (e.key === 'Enter') {
+        const target = document.querySelector<HTMLElement>('#editor input:not(:disabled), #editor textarea:not(:disabled), #editor [role="radio"]:not([aria-disabled="true"])');
+        target?.focus();
+      }
     }}>
       <div style={{
         height: visible.length * ROW,
         position: 'relative'
       }}>
-        {visible.slice(start, end).map((n, offset) => <div id={'tree-' + n.id} key={n.id} role="treeitem" aria-selected={n.id === selected} aria-level={n.depth} aria-expanded={index.children.has(n.id) ? !!query || !closed.has(n.id) : undefined} className={'tree-row' + (n.id === selected ? ' selected' : '')} style={{
+        {visible.slice(start, end).map((n, offset) => <div id={'tree-' + n.id} key={n.id} role="treeitem" aria-selected={n.id === selected} aria-level={n.depth} aria-posinset={visible.slice(0, start + offset + 1).filter(item => item.parentId === n.parentId).length} aria-setsize={visible.filter(item => item.parentId === n.parentId).length} aria-expanded={index.children.has(n.id) ? !!query || !closed.has(n.id) : undefined} className={'tree-row' + (n.id === selected ? ' selected' : '')} style={{
           position: 'absolute',
           top: (start + offset) * ROW,
           height: ROW,
