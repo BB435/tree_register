@@ -10,12 +10,14 @@ export interface RegistryEntry {
   sourceId: string; path: string; catalogId: string; title: string; registeredAt: string;
 }
 export interface Settings { maxDepth: number; sourceId: string; sourceRoots: Record<string, string>; excludedExtensions: string[]; depthPolicy: 'error' | 'truncate' }
+export interface ServerProfile { id: string; name: string; rootPath: string }
+export interface ServerWorkspace { nodes: SourceNode[]; rootPath: string; demo: boolean; failure: ScanFailure | null }
 export interface ScanFailure {
   kind: 'depth' | 'io' | 'cancelled'; message: string; path: string;
   depth?: number; limit: number; checked: number; total?: number;
 }
 export interface Snapshot {
-  nodes: SourceNode[]; tags: Tag[]; categories: Category[]; registry: RegistryEntry[];
+  nodes: SourceNode[]; tags: Tag[]; categories: Category[]; registry: RegistryEntry[]; servers?: ServerProfile[]; workspaces?: Record<string, ServerWorkspace>;
   settings: Settings; rootPath: string; demo: boolean; failure: ScanFailure | null;
 }
 export interface Progress { jobId: string; checked: number; path: string; total?: number }
@@ -28,6 +30,7 @@ export interface TreeAPI {
   restore(): Promise<Snapshot>;
   updateNode(id: string, patch: NodePatch): Promise<void>;
   updateSettings(settings: Pick<Settings, 'maxDepth' | 'sourceId' | 'excludedExtensions' | 'depthPolicy'>): Promise<Snapshot>;
+  addServer(name: string, rootPath: string): Promise<Snapshot>;
   addCategory(name: string): Promise<Snapshot>;
   addTag(label: string, categoryId: string): Promise<Snapshot>;
   updateTagDescription(id: string, description: string): Promise<Snapshot>;

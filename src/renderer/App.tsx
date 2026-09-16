@@ -7,6 +7,7 @@ import { Editor } from './Editor';
 import { RegistrySearch } from './RegistrySearch';
 import { TagList } from './TagList';
 import { CatalogGrid } from './CatalogGrid';
+import { ServerPanel } from './ServerPanel';
 export function App() {
   const [state, setState] = useState<Snapshot | null>(null),
     [selected, setSelected] = useState('');
@@ -16,6 +17,8 @@ export function App() {
     [notice, setNotice] = useState('');
   const [progress, setProgress] = useState<Progress | null>(null);
   const [screen, setScreen] = useState<'workspace' | 'registry' | 'tags' | 'grid'>('workspace');
+  const [serverName, setServerName] = useState('');
+  const [serverRoot, setServerRoot] = useState('');
   const [depth, setDepth] = useState('3'),
     [sourceId, setSourceId] = useState(''),
     [depthPolicy, setDepthPolicy] = useState<'error' | 'truncate'>('error'),
@@ -95,6 +98,7 @@ export function App() {
       mt: 3
     }} />}</Box>;
   const disabled = busy || settingsChanged;
+  const servers = state.servers ?? [{ id: state.settings.sourceId, name: state.settings.sourceId, rootPath: state.settings.sourceRoots[state.settings.sourceId] ?? '' }];
   if (screen === 'registry') return <><Box component="header" className="app-header"><Stack direction="row" sx={{ alignItems: 'center', gap: 1.5 }}><Box className="brand-icon">▥</Box><Typography sx={{ fontWeight: 750, fontSize: 21 }}>Tree Register</Typography></Stack><Chip label="登録データ検索" variant="outlined" /></Box><RegistrySearch state={state} onBack={() => setScreen('workspace')} /></>;
   if (screen === 'tags') return <><Box component="header" className="app-header"><Stack direction="row" sx={{ alignItems: 'center', gap: 1.5 }}><Box className="brand-icon">▥</Box><Typography sx={{ fontWeight: 750, fontSize: 21 }}>Tree Register</Typography></Stack><Chip label="タグ一覧" variant="outlined" /></Box><TagList state={state} busy={busy} onSave={(id, description) => void run(() => window.tree.updateTagDescription(id, description))} onBack={() => setScreen('workspace')} /></>;
   if (screen === 'grid') return <><Box component="header" className="app-header"><Stack direction="row" sx={{ alignItems: 'center', gap: 1.5 }}><Box className="brand-icon">▥</Box><Typography sx={{ fontWeight: 750, fontSize: 21 }}>Tree Register</Typography></Stack><Chip label="表形式編集" variant="outlined" /></Box><CatalogGrid state={state} busy={busy} onPatch={patch} onBack={() => setScreen('workspace')} /></>;
@@ -111,6 +115,7 @@ export function App() {
           color: "text.secondary"
         }}>DATA CATALOG WORKSPACE</Typography></Stack><Chip label="DESKTOP / v0.1" variant="outlined" /></Box>
     <Box component="main" className="workspace">
+      <ServerPanel servers={servers} currentId={state.settings.sourceId} busy={busy} name={serverName} root={serverRoot} setName={setServerName} setRoot={setServerRoot} onAdd={() => void run(() => window.tree.addServer(serverName, serverRoot).then(result => { setServerName(''); setServerRoot(''); return result; }))} onSelect={id => { const server = servers.find(s => s.id === id); if (server) void run(() => window.tree.updateSettings({ maxDepth: state.settings.maxDepth, sourceId: id, excludedExtensions: state.settings.excludedExtensions ?? [], depthPolicy: state.settings.depthPolicy ?? 'error' })); }} />
       <Box className="page-heading"><Box><Typography sx={{
             color: "primary.main",
             fontSize: 11,

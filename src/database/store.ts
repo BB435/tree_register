@@ -10,6 +10,7 @@ export class Store {
     if (version > 1) { this.db.close(); throw new Error('このデータベースは新しいアプリで作成されています。対応するバージョンを使用してください。'); }
     this.db.exec(`PRAGMA foreign_keys=ON; PRAGMA journal_mode=WAL; PRAGMA busy_timeout=5000;
       CREATE TABLE IF NOT EXISTS app_state (id INTEGER PRIMARY KEY CHECK(id=1), payload TEXT NOT NULL);
+      CREATE TABLE IF NOT EXISTS servers (id TEXT PRIMARY KEY, name TEXT NOT NULL, root_path TEXT NOT NULL);
       CREATE TABLE IF NOT EXISTS categories (id TEXT PRIMARY KEY, name TEXT NOT NULL UNIQUE);
       CREATE TABLE IF NOT EXISTS tags (id TEXT PRIMARY KEY, label TEXT NOT NULL UNIQUE, category_id TEXT NOT NULL REFERENCES categories(id));
       CREATE TABLE IF NOT EXISTS nodes (id TEXT PRIMARY KEY, parent_id TEXT REFERENCES nodes(id) DEFERRABLE INITIALLY DEFERRED, source_path TEXT NOT NULL UNIQUE, position INTEGER NOT NULL, payload TEXT NOT NULL);
@@ -18,7 +19,16 @@ export class Store {
       CREATE TABLE IF NOT EXISTS registry (source_id TEXT NOT NULL, path_key TEXT NOT NULL, payload TEXT NOT NULL, PRIMARY KEY(source_id,path_key));
       PRAGMA user_version=1;`);
     if (!this.db.prepare('SELECT id FROM app_state').get()) this.save(sampleState());
+    this.ensureServerProfile();
   }
+  private ensureServerProfile() {
+    if (this.db.prepare('SELECT id FROM servers LIMIT 1').get()) return;
+    const state = this.loadWithoutServers();
+    const id = state.settings.sourceId;
+    const root = state.settings.sourceRoots[id] ?? '';
+    this.db.prepare('INSERT OR IGNORE INTO servers VALUES (?,?,?)').run(id, id, root);
+  }
+  private loadWithoutServers(): Snapshot { const row = this.db.prepare('SELECT payload FROM app_state WHERE id=1').get()!; const header = JSON.parse(String(row.payload)); const nodes = this.db.prepare('SELECT payload FROM nodes ORDER BY position').all().map(r => JSON.parse(String(r.payload))); const categories = this.db.prepare('SELECT id,name FROM categories ORDER BY rowid').all(); const tags = this.db.prepare('SELECT id,label,category_id AS categoryId FROM tags ORDER BY rowid').all(); const registry = this.db.prepare('SELECT payload FROM registry ORDER BY rowid').all().map(r => JSON.parse(String(r.payload))); return { ...header, nodes, categories, tags, registry }; }
   private transaction(fn: () => void) {
     this.db.exec('BEGIN IMMEDIATE');
     try { fn(); this.db.exec('COMMIT'); } catch (error) { this.db.exec('ROLLBACK'); throw error; }
@@ -30,11 +40,15 @@ export class Store {
     const categories = this.db.prepare('SELECT id,name FROM categories ORDER BY rowid').all();
     const tags = this.db.prepare('SELECT id,label,category_id AS categoryId FROM tags ORDER BY rowid').all();
     const registry = this.db.prepare('SELECT payload FROM registry ORDER BY rowid').all().map(r => JSON.parse(String(r.payload)));
-    return { ...header, nodes, categories, tags, registry };
+    const servers = this.db.prepare('SELECT id,name,root_path AS rootPath FROM servers ORDER BY rowid').all();
+    return { ...header, nodes, categories, tags, registry, servers };
   }
   save(state: Snapshot) {
     this.transaction(() => {
       this.db.exec('DELETE FROM node_tags; DELETE FROM nodes; DELETE FROM tags; DELETE FROM categories; DELETE FROM registry;');
+      this.db.exec('DELETE FROM servers;');
+      const server = this.db.prepare('INSERT INTO servers VALUES (?,?,?)');
+      for (const s of state.servers ?? [{ id: state.settings.sourceId, name: state.settings.sourceId, rootPath: state.settings.sourceRoots[state.settings.sourceId] ?? '' }]) server.run(s.id, s.name, s.rootPath);
       const category = this.db.prepare('INSERT INTO categories VALUES (?,?)');
       state.categories.forEach(c => category.run(c.id, c.name));
       const tag = this.db.prepare('INSERT INTO tags VALUES (?,?,?)');

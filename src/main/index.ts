@@ -7,6 +7,7 @@ import type { Progress } from '../shared/types';
 
 // Smoke tests use a separate data directory and never alter the user's database.
 if (process.env.TREE_REGISTER_TEST_DATA) app.setPath('userData', process.env.TREE_REGISTER_TEST_DATA);
+if (process.env.TREE_REGISTER_SMOKE) app.commandLine.appendSwitch('disable-gpu');
 if (!app.requestSingleInstanceLock()) app.exit(0);
 let window: BrowserWindow;
 let worker: Worker;
@@ -65,6 +66,7 @@ app.whenReady().then(async () => {
     return request('updateNode', { id, patch });
   });
   handle('moveTag', (id, categoryId) => exclusive(() => request('moveTag', { id, categoryId })));
+  handle('addServer', (name, rootPath) => exclusive(() => request('addServer', { name, rootPath })));
   handle('addTag', (label, categoryId) => exclusive(() => request('addTag', { label, categoryId })));
   handle('updateTagDescription', (id, description) => exclusive(() => request('updateTagDescription', { id, description })));
   handle('depthDemo', () => exclusive(() => request('depthDemo', { jobId: randomUUID() })));
@@ -80,7 +82,9 @@ app.whenReady().then(async () => {
   }));
   handle('exportConfig', () => exclusive(async () => {
     const configuration = await request('export', { jobId: randomUUID() });
-    const result = await dialog.showSaveDialog(window, { title: '登録設定を保存', defaultPath: 'catalog-registration.json', filters: [{ name: 'JSON', extensions: ['json'] }] });
+    const current = await request<any>('getState');
+    const sourceId = String(current.settings.sourceId).replace(/[\\/:*?"<>|]/g, '_');
+    const result = await dialog.showSaveDialog(window, { title: `${sourceId} の登録設定を保存`, defaultPath: `${sourceId}-catalog-registration.json`, filters: [{ name: 'JSON', extensions: ['json'] }] });
     if (result.canceled || !result.filePath) return null;
     const temporary = result.filePath + '.' + randomUUID() + '.tmp';
     try { await writeFile(temporary, JSON.stringify(configuration, null, 2), { encoding: 'utf8', flag: 'wx' }); await rename(temporary, result.filePath); }

@@ -12,7 +12,12 @@ import type { Snapshot } from '../shared/types';
 const port = parentPort!;
 const store = new Store(workerData.databasePath);
 let state = store.load();
-const commit = (next: Snapshot) => { store.save(next); state = next; return state; };
+const commit = (next: Snapshot) => {
+  const workspaces = { ...(state.workspaces ?? {}) };
+  workspaces[state.settings.sourceId] = { nodes: state.nodes, rootPath: state.rootPath, demo: state.demo, failure: state.failure };
+  const saved = { ...next, workspaces };
+  store.save(saved); state = saved; return state;
+};
 function assertEditable() {
   if (analyze(state).blocked) throw new Error('読込停止中は設定項目を編集できません。エラーを解消してください。');
 }
@@ -28,6 +33,14 @@ async function run(method: string, args: any) {
     case 'updateSettings': {
       const input = settingsInput.parse(args);
       const next = { ...state, settings: { ...state.settings, ...input } };
+      if (input.sourceId !== state.settings.sourceId) {
+        const workspaces = { ...(state.workspaces ?? {}) };
+        workspaces[state.settings.sourceId] = { nodes: state.nodes, rootPath: state.rootPath, demo: state.demo, failure: state.failure };
+        const target = workspaces[input.sourceId];
+        if (target) Object.assign(next, target);
+        else Object.assign(next, { nodes: [], rootPath: '', demo: false, failure: null });
+        next.workspaces = workspaces;
+      }
       // Binding a different source does not silently reinterpret an already loaded folder.
       const base = next.settings.sourceRoots[input.sourceId];
       if (base && state.rootPath && !state.demo) {
@@ -35,6 +48,14 @@ async function run(method: string, args: any) {
         next.nodes = state.nodes.map(n => ({ ...n, sourcePath: path.relative(base, n.absolutePath).split(path.sep).join('/') }));
       }
       return commit(next);
+    }
+    case 'addServer': {
+      if (typeof args?.name !== 'string' || !args.name.trim() || args.name.trim().length > 200) throw new Error('サーバー名は1〜200文字で入力してください。');
+      if (typeof args?.rootPath !== 'string' || !args.rootPath.trim()) throw new Error('基準パスを入力してください。');
+      const id = args.name.trim();
+      const servers = state.servers ?? [];
+      if (servers.some(s => s.id === id)) throw new Error('同じサーバーIDが既に存在します。');
+      return commit({ ...state, servers: [...servers, { id, name: id, rootPath: args.rootPath.trim() }] });
     }
     case 'updateNode': {
       assertEditable();

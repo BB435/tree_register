@@ -9,6 +9,7 @@ const api: TreeAPI = {
   restore: () => ipcRenderer.invoke('tree:restore'),
   updateNode: (id, patch) => ipcRenderer.invoke('tree:updateNode', id, patch),
   updateSettings: settings => ipcRenderer.invoke('tree:updateSettings', settings),
+  addServer: (name, rootPath) => ipcRenderer.invoke('tree:addServer', name, rootPath),
   addCategory: name => ipcRenderer.invoke('tree:addCategory', name),
   addTag: (label, categoryId) => ipcRenderer.invoke('tree:addTag', label, categoryId),
   updateTagDescription: (id, description) => ipcRenderer.invoke('tree:updateTagDescription', id, description),
