@@ -6,8 +6,8 @@ import { registryInput, settingsInput } from '../src/shared/validation';
 
 test('sample tags and DCAT standalone structure', () => {
   const state = sampleState(); state.registry = [];
-  assert.equal(state.tags.length, 132);
-  assert.equal(new Set(state.tags.map(t => t.id)).size, 132);
+  assert.equal(state.tags.length, 66);
+  assert.equal(new Set(state.tags.map(t => t.id)).size, 66);
   const result = exportConfiguration(state);
   assert.equal(result.catalogs.length, 4);
   assert.equal(result.datasets.length, 4);
