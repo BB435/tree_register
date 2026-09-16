@@ -62,6 +62,8 @@ export function exportConfiguration(state: Snapshot) {
   const base = (n: SourceNode) => {
     const m = a.metadata.get(n.id)!;
     return { id: n.id, sourcePath: n.sourcePath, title: m.title, description: m.description,
+      catalogCategoryId: n.mode === 'dataset' ? undefined : n.catalogCategoryId,
+      catalogCategory: n.mode === 'dataset' ? undefined : state.categories.find(c => c.id === n.catalogCategoryId)?.name,
       tags: m.tagIds.map(id => tagNames.get(id)!), tagIds: m.tagIds };
   };
   return {

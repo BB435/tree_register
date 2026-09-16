@@ -98,6 +98,12 @@ export function Editor({
           mt: 1.5
         }}>登録先：{['top', 'standalone'].includes(n.mode) ? 'トップレベル' : n.parentId ? a.metadata.get(n.parentId)?.title : '親カタログなし'}</Typography>
       </Box>
+      {n.mode !== 'dataset' && <Box><Typography sx={{ fontWeight: 700, mb: 1.5 }}>カタログカテゴリ</Typography>
+        <TextField select fullWidth label="カタログカテゴリ" value={n.catalogCategoryId ?? ''} disabled={busy || a.blocked || a.excluded.has(n.id)} onChange={e => patch(n.id, { catalogCategoryId: e.target.value || undefined })}>
+          <MenuItem value="">未分類</MenuItem>{state.categories.map(c => <MenuItem key={c.id} value={c.id}>{c.name}</MenuItem>)}
+        </TextField>
+        <Typography sx={{ fontSize: 11, color: 'text.secondary', mt: 1 }}>タグとは別に、カタログ単位で分類できます。</Typography>
+      </Box>}
       <Divider />
       <Typography sx={{
         fontWeight: 700

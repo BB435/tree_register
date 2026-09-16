@@ -5,7 +5,7 @@ export const settingsInput = z.object({ maxDepth: z.number().int().min(1).max(32
 export const nodePatchInput = z.object({
   mode: z.enum(['top', 'sub', 'dataset', 'standalone', 'exclude']).optional(),
   title: z.string().max(2000).optional(), description: z.string().max(100000).optional(),
-  tagIds: z.array(z.string()).max(10000).optional(), inherit: z.boolean().optional(),
+  tagIds: z.array(z.string()).max(10000).optional(), catalogCategoryId: z.string().optional(), inherit: z.boolean().optional(),
 }).strict();
 const relativePath = z.string().min(1).max(32767).refine(p =>
   !p.includes('\\') && !p.includes(':') && !p.split('/').some(s => !s || s === '.' || s === '..'), 'パスは相対パスを / 区切りで指定してください。');

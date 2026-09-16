@@ -45,6 +45,7 @@ async function run(method: string, args: any) {
       const allowed = n.kind === 'folder' ? ['top', 'sub', 'exclude'] : ['dataset', 'standalone', 'exclude'];
       if (patch.mode && !allowed.includes(patch.mode)) throw new Error('この項目に指定できない登録区分です。');
       if (patch.tagIds && (new Set(patch.tagIds).size !== patch.tagIds.length || patch.tagIds.some(id => !state.tags.some(t => t.id === id)))) throw new Error('タグが不正です。');
+      if (patch.catalogCategoryId && !state.categories.some(c => c.id === patch.catalogCategoryId)) throw new Error('カタログカテゴリが不正です。');
       const next = { ...n, ...patch };
       store.updateNode(next); state.nodes = state.nodes.map(item => item.id === n.id ? next : item);
       return null;

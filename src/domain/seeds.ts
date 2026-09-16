@@ -164,7 +164,7 @@ export function sampleState(): Snapshot {
  const {categories,tags}=seedTags();const nodes:SourceNode[]=[];
  const add=(name:string,kind:'folder'|'file',parentId:string|null,title=name,labels:string[]=[],mode?:SourceNode['mode'])=>{
  const parent=nodes.find(n=>n.id===parentId);const sourcePath=parent?parent.sourcePath+'/'+name:name;
- const node:SourceNode={id:'sample-'+nodes.length,name,kind,parentId,title,description:'地域の公開データを整理したサンプルです。',tagIds:tags.filter(t=>labels.includes(t.label)).map(t=>t.id),sourcePath,absolutePath:'demo:/'+sourcePath,depth:parent?parent.depth+1:1,mode:mode??(kind==='file'?'dataset':parentId?'sub':'top'),inherit:false};nodes.push(node);return node.id;
+ const node:SourceNode={id:'sample-'+nodes.length,name,kind,parentId,title,description:'地域の公開データを整理したサンプルです。',tagIds:tags.filter(t=>labels.includes(t.label)).map(t=>t.id),catalogCategoryId: kind === 'folder' ? categories[0]?.id : undefined,sourcePath,absolutePath:'demo:/'+sourcePath,depth:parent?parent.depth+1:1,mode:mode??(kind==='file'?'dataset':parentId?'sub':'top'),inherit:false};nodes.push(node);return node.id;
  };
  const root=add('地域データアーカイブ','folder',null,'地域データアーカイブ',['オープンデータ','地域情報']);
  const population=add('01_人口・世帯','folder',root,'人口・世帯統計',['統計','2026年度']);

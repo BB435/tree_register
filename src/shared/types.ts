@@ -1,5 +1,5 @@
 export type Mode = 'top' | 'sub' | 'dataset' | 'standalone' | 'exclude';
-export interface Metadata { title: string; description: string; tagIds: string[] }
+export interface Metadata { title: string; description: string; tagIds: string[]; catalogCategoryId?: string }
 export interface SourceNode extends Metadata {
   id: string; parentId: string | null; name: string; kind: 'folder' | 'file';
   sourcePath: string; absolutePath: string; depth: number; mode: Mode; inherit: boolean;
@@ -19,7 +19,7 @@ export interface Snapshot {
   settings: Settings; rootPath: string; demo: boolean; failure: ScanFailure | null;
 }
 export interface Progress { jobId: string; checked: number; path: string; total?: number }
-export type NodePatch = Partial<Pick<SourceNode, 'mode' | 'title' | 'description' | 'tagIds' | 'inherit'>>;
+export type NodePatch = Partial<Pick<SourceNode, 'mode' | 'title' | 'description' | 'tagIds' | 'inherit' | 'catalogCategoryId'>>;
 export interface TreeAPI {
   getState(): Promise<Snapshot>;
   chooseFolder(): Promise<Snapshot | null>;
