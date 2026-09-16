@@ -29,6 +29,7 @@ export interface TreeAPI {
   updateNode(id: string, patch: NodePatch): Promise<void>;
   updateSettings(settings: Pick<Settings, 'maxDepth' | 'sourceId'>): Promise<Snapshot>;
   addCategory(name: string): Promise<Snapshot>;
+  addTag(label: string, categoryId: string): Promise<Snapshot>;
   moveTag(id: string, categoryId: string): Promise<Snapshot>;
   importRegistry(): Promise<Snapshot | null>;
   excludeRegistered(): Promise<Snapshot>;

@@ -20,6 +20,8 @@ export function Editor({
   const [query, setQuery] = useState(''),
     [categoryId, setCategoryId] = useState('');
   const [newCategory, setNewCategory] = useState(''),
+    [newTag, setNewTag] = useState(''),
+    [newTagCategory, setNewTagCategory] = useState(''),
     [adminTag, setAdminTag] = useState<string | null>(null),
     [destination, setDestination] = useState('');
   const meta = a.metadata.get(n.id)!;
@@ -181,6 +183,17 @@ export function Editor({
       }}>検索条件を変更しても選択は保持されます。</Typography>
       <Accordion disableGutters><AccordionSummary expandIcon="⌄">タグのカテゴリ分類を編集（全項目共通）</AccordionSummary><AccordionDetails>
         <Stack spacing={2}>
+          <Typography sx={{ fontWeight: 700 }}>カタログ用タグを追加</Typography>
+          <TextField label="新しいタグ名" value={newTag} onChange={e => setNewTag(e.target.value)} slotProps={{ htmlInput: { maxLength: 100 } }} />
+          <TextField select label="タグのカテゴリ" value={newTagCategory} onChange={e => setNewTagCategory(e.target.value)}>
+            <MenuItem value="">選択してください</MenuItem>{state.categories.map(c => <MenuItem key={c.id} value={c.id}>{c.name}</MenuItem>)}
+          </TextField>
+          <Button variant="outlined" disabled={busy || a.blocked || !newTag.trim() || !newTagCategory} onClick={() => {
+            run(() => window.tree.addTag(newTag, newTagCategory));
+            setNewTag('');
+          }}>タグを追加</Button>
+          <Divider />
+          <Typography sx={{ fontWeight: 700 }}>カタログ用カテゴリを追加・変更</Typography>
           <Autocomplete options={state.tags} getOptionLabel={t => t.label} value={state.tags.find(t => t.id === adminTag) ?? null} onChange={(_, t) => {
               setAdminTag(t?.id ?? null);
               setDestination(t?.categoryId ?? '');

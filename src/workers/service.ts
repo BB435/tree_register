@@ -56,6 +56,14 @@ async function run(method: string, args: any) {
       if (state.categories.some(c => c.name === name)) throw new Error('同名のカテゴリがあります。');
       return commit({ ...state, categories: [...state.categories, { id: randomUUID(), name }] });
     }
+    case 'addTag': {
+      assertEditable();
+      if (typeof args?.label !== 'string' || !args.label.trim() || args.label.trim().length > 100) throw new Error('タグ名は1〜100文字で入力してください。');
+      if (typeof args?.categoryId !== 'string' || !state.categories.some(c => c.id === args.categoryId)) throw new Error('タグのカテゴリを選択してください。');
+      const label = args.label.trim();
+      if (state.tags.some(t => t.label === label)) throw new Error('同名のタグがあります。');
+      return commit({ ...state, tags: [...state.tags, { id: randomUUID(), label, categoryId: args.categoryId }] });
+    }
     case 'moveTag': {
       assertEditable();
       if (!state.categories.some(c => c.id === args?.categoryId) || !state.tags.some(t => t.id === args?.id)) throw new Error('タグまたはカテゴリが不正です。');

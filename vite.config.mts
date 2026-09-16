@@ -13,5 +13,15 @@ export default defineConfig({
     },
   }],
   server: { host: '127.0.0.1', port: 5173, strictPort: true },
-  build: { outDir: resolve('dist/renderer'), emptyOutDir: true },
+  build: { 
+    outDir: resolve('dist/renderer'),
+    emptyOutDir: true ,
+    rolldownOptions:{
+      output:{
+        codeSplitting:{
+          groups: [
+          { name: 'react-vendor', test: /node_modules\/(react|react-dom|react-router-dom)/, minSize: 20000 },
+          { name: 'recharts', test: /node_modules\/zod/, minSize: 20000 },
+      ]}}
+  }},
 });
